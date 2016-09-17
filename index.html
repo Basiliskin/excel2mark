@@ -1,0 +1,496 @@
+<html>
+  <head>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Excel to Envelop Marks</title>
+	
+    <script type="text/javascript" src="js/knockout-3.4.0.js"></script>
+	<script src="js/jquery-1.12.2.min.js"></script>
+	<script src="js/jQuery.print.js"></script>
+	<script src="js/jszip.min.js"></script>
+	<script src="js/uikit.min.js"></script>
+	<script src="js/xls.full.min.js"></script>
+	<script src="js/xlsx.full.min.js"></script>
+	<script src="js/array_db.js"></script>
+	<link id="data-uikit-theme" rel="stylesheet" href="js/uikit.docs.min.css">
+	
+	</head>
+  <body>
+	
+	<style>
+	@page {
+		size: 21cm 29.7cm;
+		margin: 10mm 10mm 0mm 10mm; 
+	}
+	.emark2x12 {
+		float: left;
+		border: 1mm solid black;
+		width : 9.9cm;
+		height : 2.4cm;
+		font: 12pt "Tahoma";
+		text-align: left;
+		display: table-cell; 
+		vertical-align: middle;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
+	.emark3x8 {
+		float: left;
+		border: 1mm solid black;
+		width : 6.8cm;
+		height : 3.6cm;
+		font: 12pt "Tahoma";
+		text-align: left;
+		display: table-cell; 
+		vertical-align: middle;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
+	div.chapter {
+		width : 21cm;
+		height : 29.7cm;
+		page-break-after: always;
+	}
+	</style>
+<div class="uk-grid"><!-- MAIN CONTENT -->
+	<div class="uk-width-1-1">
+		<div> <!-- Data -->
+			<ul class="uk-subnav uk-subnav-pill" data-uk-switcher="{connect:'#my-id-one', animation: 'slide-vertical'}">
+				<li><a href="">Load</a></li>
+				<li><a href="">Marks</a></li>
+				<li><a href="">Help</a></li>
+			</ul>
+			<ul id="my-id-one" class="uk-switcher">
+				<li><!-- Load -->
+					<div class="uk-grid"><!-- MAIN CONTENT -->
+						<div class="uk-width-1-1">
+							<input type="file" id="openFile" >
+						</div>
+					</div>
+					<div class="uk-grid"><!-- Settins -->
+						<div class="uk-width-1-3" data-bind="visible:Columns().length>0"> 
+							<div class="uk-grid">
+								<div class="uk-width-1-1">
+									Fill if Empty
+								</div>
+							</div>							
+							<select data-bind="foreach: Columns, selectedOptions: chosenEmpty, event:{ change: fillEmpty }" multiple size="4" style="width:200px">
+								<option data-bind="text: name, attr: { value: id }"></option>
+							</select>
+						</div>
+						<div class="uk-width-1-3" data-bind="visible:chosenEmpty().length>0">
+							<div class="uk-grid">
+								<div class="uk-width-1-1">
+									Merge columns
+								</div>
+							</div>							
+							
+							<select data-bind="foreach: Columns, selectedOptions: chosenMerge, event:{ change: setMerge }" multiple size="4" style="width:200px">
+								<option data-bind="text: name, attr: { value: id }"></option>
+							</select>
+						</div>
+						<div class="uk-width-1-3" data-bind="visible:chosenMerge().length>0">
+							<div class="uk-grid">
+								<div class="uk-width-1-1">
+									Group by
+								</div>
+							</div>							
+							
+							<select data-bind="foreach: Columns, selectedOptions: chosenGroup, event:{ change: setGroup }" multiple size="4" style="width:200px">
+								<option data-bind="text: name, attr: { value: id }"></option>
+							</select>
+						</div>
+						
+					</div>
+					<div class="uk-grid"><!-- TABLE CONTENT -->
+						<div class="uk-width-1-1">
+							<div style="overflow:auto; height:400px;width:100%;margin:10px">
+							<table>
+								<thead>
+									<tr data-bind="foreach: Columns">
+										<th >
+											<span data-bind="text: name"></span>
+										</th>
+									</tr>
+								</thead>
+								<tbody data-bind="foreach: Rows">
+									<tr  data-bind="foreach: $root.Columns">
+										<td>
+											<span data-bind="text: $parent[name]"></span>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+							</div>
+							<div class="pagination pull-right" data-bind="visible:Rows().length>0">
+								<ul class="uk-pagination">
+									<li data-bind="disabled:!CurrentPage">
+										 <a href="#" data-bind="click: prevPage()" class="uk-pagination-previous"><span>«</span></a>
+									</li>
+									<li data-bind="foreach: Pages">
+										<a href="#" data-bind="click: $root.setPage.bind($data,$data),text:index+1,css:{'uk-active':$root.activePage($data)}"></a>
+									</li>								 
+									<li data-bind="disabled:PagesCount<=CurrentPage">
+										<a href="#" data-bind="click: nextPage()" class="uk-pagination-next"><span>»</span></a>
+									</li>
+								</ul>
+							</div>
+
+						</div>
+					</div>
+				</li>
+				<li ><!-- Marks -->
+					<div class="uk-grid">
+						<div class="uk-width-1-2">
+							<div class="uk-grid">
+								<div class="uk-width-1-1">
+									Table
+								</div>
+							</div>							
+							
+							<select data-bind="foreach: TableType" style="width:200px" multiple size="2">
+								<option data-bind="click:$root.setTable($data,$data) ,text: name, attr: { value: id }"></option>
+							</select>
+						</div>
+						<div class="uk-width-1-2">
+							<button data-bind="click: Print">Print</button>
+						</div>
+					</div>
+					<div id="ToPrint" data-bind="foreach: Grouped">		
+						<div class="chapter">
+							<div data-bind="foreach: Items">
+								<div data-bind="css:$root.MarkClass">
+									<span data-bind="html: title" style="margin:2mm">
+								</div>
+							</div>
+						</div>
+					</div>
+				</li>
+				<li><!-- Help -->
+					** select multiple items from list,with CTRL button and mouse click
+					1)first row is header<br>
+					1)mark columns to be filled with previous data is empty<br>
+					2)select columns to merge<br>
+					3)select group fields<br>
+					4)select table 1/2/3/4<br>
+					5)select font<br>
+					6)select font size<br>
+				</li>
+			</ul>
+		</div>
+	</div>
+</div>
+<div style="display:none;"><!-- dialogs -->
+	<div id="printA4">
+	</div>
+</div>
+	<script>
+	function fixdata(data) {
+		var o = "", l = 0, w = 10240;
+		for(; l<data.byteLength/w; ++l) o+=String.fromCharCode.apply(null,new Uint8Array(data.slice(l*w,l*w+w)));
+		o+=String.fromCharCode.apply(null, new Uint8Array(data.slice(l*w)));
+		return o;
+	}
+	function get_header_row(sheet) {
+		var headers = [];
+		var range = XLSX.utils.decode_range(sheet['!ref']);
+		var C, R = range.s.r; /* start in the first row */
+		/* walk every column in the range */
+		for(C = range.s.c; C <= range.e.c; ++C) {
+			var cell = sheet[XLSX.utils.encode_cell({c:C, r:R})] /* find the cell in the first row */
+
+			var hdr = "COLUMN_" + C; // <-- replace with your desired default 
+			if(cell && cell.t) hdr = XLSX.utils.format_cell(cell);
+
+			headers.push(hdr);
+		}
+		return headers;
+	}
+	function getTable(workbook,lib) {
+		var result = [[]];
+		workbook.SheetNames.forEach(function(sheetName) {
+			if(result[0].length<1){
+				var ws = workbook.Sheets[sheetName];
+
+				var headers = get_header_row(ws);
+				
+				console.info('headers',headers);
+				var col_id = 1;
+				result[0] = lib.utils.sheet_to_json(ws,{
+					range:1,
+					header: headers
+				});
+			}
+		});
+		return result;
+	}
+	</script>
+	<script>
+	//http://caragulak.nsupdate.info/proj/excel2mark/index.html
+	var MainModel = function() {
+		var self = this;
+		var tableType;
+		var cols = [];
+		var rows = [];
+		var pages;
+		var db = new ArrayDB();
+		self.chosenEmpty = ko.observableArray([]);
+		self.chosenMerge = ko.observableArray([]);
+		self.chosenGroup = ko.observableArray([]);
+		self.Rows = ko.observableArray([]);		
+		self.Pages = ko.observableArray([]);
+		self.Columns = ko.observableArray([]);
+		self.Marks = ko.observableArray([]);
+		self.Grouped = ko.observableArray([]);
+		self.TableType = ko.observableArray([]);
+		self.TableClass = ko.observable('uk-width-1-2');
+		self.MarkClass = ko.observable('emark2x12');
+		self.Print = function(){
+			var html = $('#ToPrint').html();
+			console.info('Print',html.length);
+			$('#printA4').empty().html(html).print({
+				globalStyles: true,
+				mediaPrint: false,
+				iframe: true,
+				timeout: 250,
+				doctype: '<!doctype html>'
+			});
+		};
+		self.TableType.push({
+			name:'2x12',
+			id:0,
+			class:'uk-width-1-2',
+			mclass:'emark2x12'
+		});
+		self.TableType.push({
+			name:'3x8',
+			id:1,
+			class:'uk-width-1-3',
+			mclass:'emark3x8'
+		});
+		console.info('db',db);
+		self.activePage = function(item){
+			//console.info('pages.activePage',pages.currentPage,item);
+			return item.active;
+		};
+		self.groupToPages = function(refresh){
+			self.Rows.removeAll();
+			self.Pages.removeAll();
+			if(!refresh) pages = db.groupToPages(rows,20,function(row){ return true; });
+			
+			var cpage = pages.pages[pages.currentPage];
+			//console.info('pages.currentPage',pages.currentPage,cpage);
+			for(var i=0;i<cpage.length;i++) self.Rows.push(rows[cpage[i]]);
+
+			var range = pages.range(10);
+			for(var i=0;i<range.length;i++) self.Pages.push(range[i]);
+		};
+		self.CurrentPage = function() {
+			return pages ? pages.currentPage : 0;
+		};
+		self.PagesCount = function() {
+			return pages ? pages.pages.length-1 : 0;
+		};
+		
+		self.prevPage = function () {
+			if (pages && pages.currentPage > 0) {
+				pages.currentPage--;
+				self.groupToPages(true);
+			}
+		};    
+		self.nextPage = function () {
+			if (pages && pages.currentPage < pages.pages.length - 1) {
+				pages.currentPage++;
+				self.groupToPages(true);
+			}
+		};    
+		self.setPage = function (item) {
+			pages.currentPage = item.index;
+			self.groupToPages(true);
+		};
+		
+		
+		self.fillEmpty = function(){
+			console.info('self.chosenEmpty',self.chosenEmpty());
+			var index = self.chosenEmpty();
+			
+			for(var i=0;i<index.length;i++){
+				var col = self.Columns()[parseInt(index[i])].name;
+				for(var r=0;r<rows.length;r++){
+					if(r>0 && !rows[r][col]) rows[r][col] = rows[r-1][col];					
+				}
+			}
+			self.groupToPages(true);
+		};
+		self.setMerge = function(){
+			console.info('self.setMerge',self.chosenMerge());
+			var index = self.chosenMerge();
+			
+			self.Marks.removeAll();
+			var cols = [];
+			for(var i=0;i<index.length;i++){
+				var col = self.Columns()[parseInt(index[i])].name;
+				cols.push(col);
+			}
+			for(var r=0;r<rows.length;r++){
+				var row = rows[r];
+				var text = '';
+				for(var j=0;j<cols.length;j++){
+					text+=' '+row[cols[j]];
+				}
+				self.Marks.push({
+					title : text
+				});
+			}
+			self.setGroup();
+		};
+		self.setTable = function($item){
+			//console.info('self.setTable',$item);
+			tableType = $item;
+			self.TableClass(tableType.class);
+			self.MarkClass(tableType.mclass);
+			self.setGroup();
+		};
+		self.setGroup = function(){
+			console.info('self.setMerge',self.chosenGroup());
+			var index = self.chosenGroup();
+			
+			var titles = self.Marks();
+			self.Grouped.removeAll();
+			var cols = [];
+			for(var i=0;i<index.length;i++){
+				var col = self.Columns()[parseInt(index[i])].name;
+				cols.push(col);
+			}
+			var mcols = [];
+			index = self.chosenMerge();
+			for(var i=0;i<index.length;i++){
+				var col = self.Columns()[parseInt(index[i])].name;
+				mcols.push(col);
+			}
+			function nice_name(txt){
+				 return txt ? txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase() : '';
+			}
+			function get_title(row){
+				var text = '';
+				for(var j=0;j<mcols.length;j++){
+					text+=' '+nice_name(row[mcols[j]]);
+				}
+				return text;
+			};
+			var g = db.GroupBy(rows,cols.join(','),get_title,'<br>');
+			//console.info('Grouped',g);
+			
+			
+			tableType = tableType || self.TableType[0];
+			var grouped;
+			switch(tableType.mclass){
+				case 'emark2x12':
+					grouped = db.groupToPages(g,24,function(row){ return true; });
+					break;
+				case 'emark3x8':
+					grouped = db.groupToPages(g,24,function(row){ return true; });
+					break;
+			}
+			console.info('grouped',grouped);
+			for(var i=0;i<grouped.pages.length;i++){
+				var items = ko.observableArray([]);
+				for(var j=0;j<grouped.pages[i].length;j++){
+					items.push({
+						title : g[grouped.pages[i][j]]
+					});
+				}
+				self.Grouped.push({
+					Items : items
+				});
+			}
+			console.info('Grouped',self.Grouped());
+			/*
+			for(var r=0;r<g.length;r++){
+				var row = g[r];
+				
+				self.Grouped.push({
+					title : row
+				});
+			}
+			*/
+		};
+		self.LoadXLS = function(f,lib){
+			var reader = new FileReader();
+			var name = f.name;
+			reader.onload = function(e) {
+				cols = [];
+				self.Columns.removeAll();
+				self.Rows.removeAll();
+				self.Marks.removeAll();
+				self.Grouped.removeAll();
+				self.chosenEmpty.removeAll();
+				self.chosenMerge.removeAll();
+				self.chosenGroup.removeAll();
+				var data = e.target.result;
+				var wb;
+				try{
+					wb = lib.read(data, {type: 'binary'});
+				}catch(e){
+					console.error(1001,'invalid file format!');
+					wb = null;
+				}
+				if(wb){
+					var table  = getTable(wb,lib);
+					console.info('table',table);
+					if(table && table.length>0){
+						rows = table[0];
+						if(rows && rows.length>0){
+							
+							var row = rows[0];
+							for(var c in row){
+								cols.push(c);
+								self.Columns.push({
+									name : c,
+									id : cols.length-1
+								});
+							}						
+							self.groupToPages();
+						}
+					}
+				}
+				
+			};
+			reader.readAsBinaryString(f);
+			
+		};
+		var field = document.getElementById('openFile');
+		field.onchange = function (event) {
+			if (typeof (FileReader) == "undefined") {
+				 return;
+			}
+			event.stopPropagation();
+			event.preventDefault();
+			var files = event.target.files;
+			console.info('files',files); 
+			var fhandle = files[0];
+			var filePath = fhandle.name;
+			var extn = filePath.substring(filePath.lastIndexOf('.') + 1).toLowerCase();
+			console.info('extn',fhandle,extn); 
+			switch(extn){
+				case 'xls':
+					self.LoadXLS(fhandle,XLS);
+					break;
+				case 'xlsx':
+					self.LoadXLS(fhandle,XLSX);
+					break;
+				default:
+					break;
+			}
+		}
+	};
+	
+	ko.applyBindings(new MainModel());
+
+	</script>
+  </body>
+</html>
